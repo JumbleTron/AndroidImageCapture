@@ -7,7 +7,7 @@ local.properties
 # Build files
 build/
 app/build/
-.kotlin
+.kotlin/
 
 # Keystore files
 *.jks
