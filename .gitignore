@@ -1,0 +1,30 @@
+# IDE files
+.idea/
+*.iml
+.gradle/
+local.properties
+
+# Build files
+build/
+app/build/
+.kotlin
+
+# Keystore files
+*.jks
+*.keystore
+
+# Captures
+captures/
+
+# Lint
+.cxx/
+lint/reports/
+lint/intermediates/
+lint/generated/
+
+# Google Services
+app/google-services.json
+
+# Obfuscation
+*.pro
+proguard/
