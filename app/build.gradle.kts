@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId = "com.kielniakodu.imagecapture"
-        minSdk = 30
+        minSdk = 28
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
