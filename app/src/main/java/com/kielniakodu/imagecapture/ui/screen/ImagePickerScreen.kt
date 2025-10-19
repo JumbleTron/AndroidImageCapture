@@ -39,7 +39,7 @@ fun ImagePickerScreen(modifier: Modifier = Modifier) {
     val allMedia by viewModel.allMedia.collectAsStateWithLifecycle()
 
     val pickMediaLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
+        contract = ActivityResultContracts.OpenDocument(),
         onResult = { uri ->
             if (uri != null) {
                 viewModel.saveImageFromGallery(context, uri)
@@ -81,8 +81,14 @@ fun ImagePickerScreen(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-        Button(onClick = { showOptionsDialog = true }) {
-            Text("Wybierz lub zrób zdjęcie")
+        Row {
+            Button(onClick = { showOptionsDialog = true }) {
+                Text("Wybierz lub zrób zdjęcie")
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Button(onClick = { viewModel.removeImages() }) {
+                Text("Usuń zdjęcia")
+            }
         }
 
         if (showOptionsDialog) {
@@ -92,7 +98,7 @@ fun ImagePickerScreen(modifier: Modifier = Modifier) {
                         ListItem(
                             headlineContent = { Text("Wybierz z galerii") },
                             modifier = Modifier.clickable {
-                                pickMediaLauncher.launch("image/*")
+                                pickMediaLauncher.launch(arrayOf("image/*"))
                                 showOptionsDialog = false
                             }
                         )

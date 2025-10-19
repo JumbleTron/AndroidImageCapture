@@ -3,6 +3,7 @@ package com.kielniakodu.imagecapture.ui.viewmodel
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -54,18 +55,22 @@ class ImagePickerViewModel @Inject constructor(
 
     fun onMediaSelected(media: Image) {
         _displayedImageUri.value = media.filePath.toUri()
-        _savedInfo.value = "Wybrano z bazy:GUID: ${media.id} ścieżka: ${media.filePath}"
+        _savedInfo.value = "Wybrano z bazy:\nGUID: ${media.id}\nŚcieżka: ${media.filePath}"
     }
 
     fun saveImageFromGallery(context: Context, uri: Uri) {
         viewModelScope.launch {
-            val galleryUri = saveImageToGallery(context, uri)
-            if (galleryUri != null) {
-                val image = Image(filePath = galleryUri.toString())
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+                val image = Image(filePath = uri.toString())
                 repository.insert(image)
-                _displayedImageUri.value = galleryUri
-                _savedInfo.value = "Zapisano GUID: ${image.id} Ścieżka: ${image.filePath}"
-            } else {
+                _displayedImageUri.value = uri
+                _savedInfo.value = "Zapisano GUID: ${image.id}\nŚcieżka: ${image.filePath}"
+            } catch (e: Exception) {
+                e.printStackTrace()
                 _savedInfo.value = "Błąd zapisu obrazu w galerii"
             }
         }
@@ -79,7 +84,7 @@ class ImagePickerViewModel @Inject constructor(
                     val image = Image(filePath = galleryUri.toString())
                     repository.insert(image)
                     _displayedImageUri.value = galleryUri
-                    _savedInfo.value = "Zapisano GUID: ${image.id} Ścieżka: ${image.filePath}"
+                    _savedInfo.value = "Zapisano GUID: ${image.id}\nŚcieżka: ${image.filePath}"
                     // Clean up the temporary file
                     context.contentResolver.delete(uri, null, null)
                     tempImageUri = null
@@ -87,6 +92,14 @@ class ImagePickerViewModel @Inject constructor(
                     _savedInfo.value = "Błąd zapisu obrazu z aparatu w galerii"
                 }
             }
+        }
+    }
+
+    fun removeImages() {
+        viewModelScope.launch {
+            repository.deleteAll()
+            _displayedImageUri.value = null
+            _savedInfo.value = "Wszystkie zdjęcia zostały usunięte."
         }
     }
 
@@ -121,6 +134,7 @@ class ImagePickerViewModel @Inject constructor(
                     resolver.update(galleryUri, contentValues, null, null)
                 }
             } else {
+                @Suppress("DEPRECATION")
                 val imagesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
                 if (!imagesDir.exists()) imagesDir.mkdirs()
                 val imageFile = File(imagesDir, fileName)
@@ -128,9 +142,7 @@ class ImagePickerViewModel @Inject constructor(
                 inputStream.copyTo(outputStream)
                 galleryUri = Uri.fromFile(imageFile)
 
-                val mediaScanIntent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
-                mediaScanIntent.data = galleryUri
-                context.sendBroadcast(mediaScanIntent)
+                MediaScannerConnection.scanFile(context, arrayOf(imageFile.absolutePath), arrayOf("image/jpeg"), null)
             }
         } catch (e: Exception) {
             e.printStackTrace()

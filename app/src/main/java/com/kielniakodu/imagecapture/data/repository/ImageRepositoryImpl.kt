@@ -13,7 +13,7 @@ class ImageRepository @Inject constructor(private val imageDao: ImageDao)
         imageDao.insert(image)
     }
 
-    suspend fun delete(image: Image) {
-        imageDao.delete(image)
+    suspend fun deleteAll() {
+        imageDao.deleteAll();
     }
 }
